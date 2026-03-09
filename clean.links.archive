@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# 1. Извлекаем только ID видео из archive.txt
+awk '{print $2}' archive.txt > downloaded_ids.txt
+
+# 2. Оставляем в links.txt только те строки, которых нет в списке скачанных ID
+grep -vFf downloaded_ids.txt links.txt > links_new.txt
+
+# 3. (Опционально) Заменяем старый файл новым
+mv links_new.txt links.txt
+rm downloaded_ids.txt

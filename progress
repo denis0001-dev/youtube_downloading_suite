@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Относительные пути
+ARCHIVE="archive.txt"
+LINKS="links.txt"
+
+# Если нужно, чтобы он смотрел на SSD относительно текущей папки, 
+# можно подправить переменную ARCHIVE, например: "./Extreme SSD/Видео/YouTube/archive.txt"
+
+total=$(wc -l < "$LINKS")
+start_time=$(date +%s)
+start_count=$(wc -l < "$ARCHIVE")
+
+while true; do
+    done=$(wc -l < "$ARCHIVE")
+    current_time=$(date +%s)
+    
+    # Расчет прогресса
+    percent=$(echo "scale=2; $done * 100 / $total" | bc)
+    
+    # Расчет заполнения полоски (50 делений)
+    # Используем awk для надежности с дробными числами
+    filled=$(echo "$done $total" | awk '{printf "%d", $1 * 50 / $2}')
+    empty=$((50 - filled))
+    
+    # Расчет скорости и ETA
+    diff_done=$((done - start_count))
+    diff_time=$((current_time - start_time))
+    
+    if [ "$diff_done" -gt 0 ] && [ "$diff_time" -gt 0 ]; then
+        sec_per_vid=$(echo "scale=4; $diff_time / $diff_done" | bc)
+        remaining=$((total - done))
+        eta_sec=$(echo "$remaining * $sec_per_vid / 1" | bc)
+        
+        if [ "$eta_sec" -ge 3600 ]; then
+            eta_info=" | ETA: $(($eta_sec / 3600))h $(($eta_sec % 3600 / 60))m"
+        else
+            eta_info=" | ETA: $(($eta_sec / 60))m $(($eta_sec % 60))s"
+        fi
+    else
+        eta_info=" | ETA: замер..."
+    fi
+
+    # Сборка полоски
+    bar=$(printf "%${filled}s" | tr ' ' '#')
+    spaces=$(printf "%${empty}s" | tr ' ' ' ')
+
+    # Вывод в одну строку (\r возвращает курсор, %-110s чистит строку)
+    printf "\r%-110s" "[$bar$spaces] $percent% ($done/$total)$eta_info"
+    
+    sleep 1
+done

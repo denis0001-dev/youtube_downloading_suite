@@ -1,0 +1,58 @@
+#!/bin/bash
+
+COLLECT_LIKES=true
+THREADS=4
+THREADS_SET=false
+
+# Разбор параметров
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --no-collect)
+            COLLECT_LIKES=false
+            shift
+            ;;
+        [0-9]*)
+            if [ "$THREADS_SET" = true ]; then
+                echo "Ошибка: Количество ядер уже указано ($THREADS). Лишний параметр: $1"
+                exit 1
+            fi
+            THREADS=$1
+            THREADS_SET=true
+            shift
+            ;;
+        *)
+            echo "Неизвестный параметр: $1"
+            exit 1
+            ;;
+    esac
+done
+
+# 1. Сбор ссылок
+if [ "$COLLECT_LIKES" = true ]; then
+    echo "[*] Сбор ID из плейлиста Liked Videos..."
+    yt-dlp --get-id --flat-playlist "https://www.youtube.com/playlist?list=LL" --cookies-from-browser chrome > links.txt
+else
+    echo "[*] Режим --no-collect: использую текущий links.txt"
+fi
+
+# 2. Запуск
+echo "[*] Работаем в $THREADS поток(ов)."
+
+cat links.txt | xargs -I {} -P $THREADS yt-dlp \
+    --cookies-from-browser chrome \
+    -f "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
+    --merge-output-format mp4 \
+    --add-metadata \
+    --embed-thumbnail \
+    --embed-subs \
+    --no-overwrites \
+    --continue \
+    -i \
+    -k \
+    --clean-info-json \
+    --download-archive "./archive.txt" \
+    --js-runtimes quickjs \
+    --remote-components ejs:github \
+    --downloader dash,m3u8:native --downloader-args "threads:4" \
+    -o "./%(uploader)s - %(title)s.%(ext)s" \
+    "https://www.youtube.com/watch?v={}"

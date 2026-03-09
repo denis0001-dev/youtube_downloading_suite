@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "" > unavailable.temp
+nano unavailable.temp
+grep "Video unavailable" unavailable.temp | sed -E 's/.*\[youtube\] ([^:]+):.*/youtube \1/' >> archive.txt
+rm unavailable.temp
