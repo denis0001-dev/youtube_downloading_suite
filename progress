@@ -4,9 +4,6 @@
 ARCHIVE="archive.txt"
 LINKS="links.txt"
 
-# Если нужно, чтобы он смотрел на SSD относительно текущей папки, 
-# можно подправить переменную ARCHIVE, например: "./Extreme SSD/Видео/YouTube/archive.txt"
-
 total=$(wc -l < "$LINKS")
 start_time=$(date +%s)
 start_count=$(wc -l < "$ARCHIVE")
